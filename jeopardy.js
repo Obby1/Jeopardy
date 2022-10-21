@@ -35,12 +35,14 @@ let response = await axios.get(`https://jservice.io/api/categories`, {params: {c
 // let categories = response.data.map(el=>({
 //     id: el.id
 // }))
-let tempCategories = response.data.map(el=>{
+response.data.map(el=>{
     // console.log(el.id)
     categories.push(el.id);
 })
-console.log(categories);
-// return categories;
+let randomCats= _.sampleSize(categories, 6);
+
+// console.log(randomCats);
+return randomCats;
 
 }
 
