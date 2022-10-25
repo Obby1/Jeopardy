@@ -23,6 +23,9 @@ let allCategoriesArr = [];
 let catObj = [];
 // let categoryNames = [];
 let count = 0;
+let $startBtn = $(`#start`)
+// $start.hide();
+let gameState = `off`;
 
 //todo: ?Give IDs to each object. Assign corresponding IDs to html table. Access objects by
 // clicking on the HTML ID with event handler? 
@@ -42,6 +45,9 @@ response.data.map(el=>{
     tempCats.push(el.id);
 })
 let randomCats= _.sampleSize(tempCats, 6);
+//add a loop here that checks with api if clues length is less than 4, if yes, reject category
+// try randomCats again. Could add the code here or in getCategory function
+
 categories.push(randomCats);
 console.log(`categories array is ${categories}`)
 // console.log(`randomCats is ${randomCats}`);
@@ -75,13 +81,19 @@ question: el.question,
 answer: el.answer,
 showing: `?`,
 }));
+
 // tempObj.clues = clues;
 // console.log(clues);
 // console.log(tempObj);
+if (tempObj.clues.length <5){
+    location.reload();
+ }
+
+
 return tempObj;
 }
 
-//how do I change temp Obj name to [0-0] idx? 
+// if clues length is less than 4, do not use category?
 async function allCategories([categories]){
     for (let category of categories){
         // console.log(category);
@@ -89,6 +101,8 @@ async function allCategories([categories]){
     //    console.log(tempObj);
     allCategoriesArr.push(tempObj);
     }
+    //show start button only if all categories succesfully load
+    $startBtn.show();
 }
 
 // function getAllCats(categories){
@@ -108,12 +122,11 @@ async function allCategories([categories]){
 async function fillTable(categories) {
     let $table = $(`#jeopardy`);
     let $htmlTable = $(`
-    <table border = 1>
+    <table>
         <thead>
             <tr>
                 <th class="title">
                 ${allCategoriesArr[0].title}
-               
                 </th>
                 <th class="title">
                 ${allCategoriesArr[1].title}
@@ -241,7 +254,9 @@ async function fillTable(categories) {
     
     `)
     $table.append($htmlTable);
-    
+    //after table successfully loads, hide spinner & change button text
+    hideLoadingView();
+    changeStartBtn();
     }
 
 
@@ -282,6 +297,7 @@ if (allCategoriesArr[questionId].clues[clueId].showing === `?`){
     console.log(allCategoriesArr[questionId].clues[clueId].question);
     let $selection = $(evt.target).closest(".question");
     // $selection.html(`test`);
+    $selection.addClass(`text-question`);
     $selection.html(allCategoriesArr[questionId].clues[clueId].showing);
 } //if showing is set to question, set showing to answer
 else if (allCategoriesArr[questionId].clues[clueId].showing === allCategoriesArr[questionId].clues[clueId].question){
@@ -289,6 +305,7 @@ else if (allCategoriesArr[questionId].clues[clueId].showing === allCategoriesArr
     console.log(`question -> answer working`);
     console.log(allCategoriesArr[questionId].clues[clueId].answer);
     let $selection = $(evt.target).closest(".question");
+    $selection.addClass(`answer`);
     $selection.html(allCategoriesArr[questionId].clues[clueId].showing);
 } else if (allCategoriesArr[questionId].clues[clueId].showing === allCategoriesArr[questionId].clues[clueId].answer){
    console.log(`last step`)
@@ -306,14 +323,27 @@ else if (allCategoriesArr[questionId].clues[clueId].showing === allCategoriesArr
 /** Wipe the current Jeopardy board, show the loading spinner,
  * and update the button used to fetch data.
  */
-
+let $spinner = $(`#spin-container`);
+$startBtn.on("click", async function handleEpisodeClick(evt){
+    if (gameState=== `off`){
+        loadTableAndStart()
+        
+    } else if (gameState === `ongoing`){
+        location.reload();
+        
+    }
+    //add if logic - if table is full then reload game
+    // console.log(`clicked`);
+} )
 function showLoadingView() {
+    $spinner.show();
 
 }
 
 /** Remove the loading spinner and update the button used to fetch data. */
 
 function hideLoadingView() {
+    $spinner.hide();
 }
 
 /** Start game:
@@ -323,12 +353,28 @@ function hideLoadingView() {
  * - create HTML table
  * */
 
-async function setupAndStart() {
+async function setupCategories() {
     await getCategoryIds();
     await allCategories(categories);
-    await fillTable(categories);
+    // await getCategoryIds();
+    // await allCategories(categories);
+    // await fillTable(categories);
+    
 }
-setupAndStart()
+
+async function loadTableAndStart() {
+    // await getCategoryIds();
+    // await allCategories(categories);
+    await fillTable(categories);
+    gameState = 'ongoing';
+    
+}
+
+function changeStartBtn(){
+    $startBtn.html("Restart Game");
+}
+
+setupCategories()
 
 /** On click of start / restart button, set up game. */
 
@@ -346,7 +392,9 @@ setupAndStart()
     // fillTable(categories);
 
 
-
+//Further Study:
+//how do I optimize the code? Create categories with IDs already in them?
+//use IDs in data to access objects? 
 
 
 

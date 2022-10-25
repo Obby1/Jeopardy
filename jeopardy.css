@@ -5,3 +5,30 @@
   #8d2ab5
   #74119c
 */
+
+.question {
+  background-color: blue;
+}
+
+.text-question{
+  background-color: lightblue;
+}
+
+.answer{
+  background-color: blueviolet;
+}
+
+table {
+  text-align: center;
+  margin: 20px auto;
+}
+
+td {
+  border: 2px solid #8c6b48;
+  width: 300px;
+  height: 100px;
+}
+
+th {
+  border: 2px solid #8c6b48;
+}
