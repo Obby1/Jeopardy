@@ -18,42 +18,34 @@
 //    ...
 //  ]
 
+//declare variables
 let categories = [];
 let allCategoriesArr = [];
 let catObj = [];
-// let categoryNames = [];
 let count = 0;
 let $startBtn = $(`#start`)
-// $start.hide();
 let gameState = `off`;
+let $spinner = $(`#spin-container`);
 
-//todo: ?Give IDs to each object. Assign corresponding IDs to html table. Access objects by
-// clicking on the HTML ID with event handler? 
 
 /** Get NUM_CATEGORIES random category from API.
  *
  * Returns array of category ids
  */
 
+
+//retreive ID numbers from jservice api 
+// retreive 100 categories and select 6 randomly
 async function getCategoryIds() {
-count += 6;
 categories = [];
 tempCats = [];
-let response = await axios.get(`https://jservice.io/api/categories`, {params: {count:100, offset:count}});
+let response = await axios.get(`https://jservice.io/api/categories`, {params: {count:100}});
 response.data.map(el=>{
-    // console.log(el.id)
     tempCats.push(el.id);
 })
 let randomCats= _.sampleSize(tempCats, 6);
-//add a loop here that checks with api if clues length is less than 4, if yes, reject category
-// try randomCats again. Could add the code here or in getCategory function
-
 categories.push(randomCats);
-console.log(`categories array is ${categories}`)
-// console.log(`randomCats is ${randomCats}`);
 return categories;
-
-//todo: further optimize this code. Could be a way to shorten logic
 }
 
 /** Return object with data about a category:
@@ -71,45 +63,32 @@ return categories;
 
 async function getCategory(catId) {
 let response = await axios.get(`https://jservice.io/api/category?id=${catId}`);
-// console.log(response.data);
 let tempObj = {}
 tempObj.title= response.data.title;
-// tempObj.showing = `?`,
-// tempObj.clues= response.data.clues;
 tempObj.clues = response.data.clues.map(el=>({
 question: el.question,
 answer: el.answer,
 showing: `?`,
 }));
 
-// tempObj.clues = clues;
-// console.log(clues);
-// console.log(tempObj);
 if (tempObj.clues.length <5){
     location.reload();
  }
-
-
 return tempObj;
 }
 
-// if clues length is less than 4, do not use category?
+//for each category ID, run through getCategory function to retreive clues
 async function allCategories([categories]){
     for (let category of categories){
-        // console.log(category);
-       let tempObj= await getCategory(category);
-    //    console.log(tempObj);
+    let tempObj= await getCategory(category);
     allCategoriesArr.push(tempObj);
     }
-    //show start button only if all categories succesfully load
+    //show start button only if all categories succesfully load as this is the last function
+    //in the function chain
     $startBtn.show();
-}
+    hideLoadingView();
 
-// function getAllCats(categories){
-// let allCats = categories.map(el => {
-//     return getCategory(el)});
-// console.log(allCats);
-// }
+}
 
 /** Fill the HTML table#jeopardy with the categories & cells for questions.
  *
@@ -269,53 +248,28 @@ async function fillTable(categories) {
  * - if currently "answer", ignore click
  * */
 
-// function handleClick(evt) {
-//     console.log(evt.target.id);
-// }
 
-//what if I used 2 data attributes in table? 1 for categories arr 1 for clues arr
-//allCategories[0].clues[0]
-//evt.target.closest.question.data"cluesid"
-//need to change .showing to updated property and also refresh that dom element. JQ
-//or a recent unit has funcitonality for this. 
 
-//access clues array with clueId - clues[clueId] = {cluesobject.question etc}
-// let clue = clues[event.target.dataset.clueId];
-// how to assign clueId dynamically after getting clues from API?
 $(`#jeopardy`).on("click", function handleClick(evt){
-// let clue = e.target.dataset.id;
 let questionId = $(evt.target).closest(".question").data("question-id");
 let clueId = $(evt.target).closest(".question").data("clues-id");
-console.log(`jQ question id ${questionId}`);
-console.log(`jQ clue id ${clueId}`);
-console.log(allCategoriesArr[questionId].clues[clueId]);
-
+const question = allCategoriesArr[questionId].clues[clueId];
 //if showing is ? set to clue question
-if (allCategoriesArr[questionId].clues[clueId].showing === `?`){
-    allCategoriesArr[questionId].clues[clueId].showing = allCategoriesArr[questionId].clues[clueId].question;
-    console.log(`? -> question working`);
-    console.log(allCategoriesArr[questionId].clues[clueId].question);
+if (question.showing === `?`){
+    question.showing = question.question;
     let $selection = $(evt.target).closest(".question");
-    // $selection.html(`test`);
     $selection.addClass(`text-question`);
-    $selection.html(allCategoriesArr[questionId].clues[clueId].showing);
-} //if showing is set to question, set showing to answer
-else if (allCategoriesArr[questionId].clues[clueId].showing === allCategoriesArr[questionId].clues[clueId].question){
-    allCategoriesArr[questionId].clues[clueId].showing = allCategoriesArr[questionId].clues[clueId].answer;
-    console.log(`question -> answer working`);
-    console.log(allCategoriesArr[questionId].clues[clueId].answer);
+    $selection.html(question.showing);
+} 
+else if (question.showing === question.question){
+    question.showing = question.answer;
     let $selection = $(evt.target).closest(".question");
     $selection.addClass(`answer`);
-    $selection.html(allCategoriesArr[questionId].clues[clueId].showing);
-} else if (allCategoriesArr[questionId].clues[clueId].showing === allCategoriesArr[questionId].clues[clueId].answer){
+    $selection.html(question.showing);
+} else if (question.showing === question.answer){
    console.log(`last step`)
     return;
-}
-
-// allCategoriesArr[questionId].clues[clueId].showing = allCategoriesArr[questionId].clues[clueId].question;
-
-
-//clean up code by assigned allcatarr etc to a shorter variable. Make it easier to read. 
+} 
 });
 
 
@@ -323,25 +277,22 @@ else if (allCategoriesArr[questionId].clues[clueId].showing === allCategoriesArr
 /** Wipe the current Jeopardy board, show the loading spinner,
  * and update the button used to fetch data.
  */
-let $spinner = $(`#spin-container`);
+
+
 $startBtn.on("click", async function handleEpisodeClick(evt){
     if (gameState=== `off`){
         loadTableAndStart()
-        
     } else if (gameState === `ongoing`){
         location.reload();
-        
     }
-    //add if logic - if table is full then reload game
-    // console.log(`clicked`);
 } )
+
+
 function showLoadingView() {
     $spinner.show();
-
 }
 
 /** Remove the loading spinner and update the button used to fetch data. */
-
 function hideLoadingView() {
     $spinner.hide();
 }
@@ -353,81 +304,30 @@ function hideLoadingView() {
  * - create HTML table
  * */
 
+// upon page loading, run this function
+// get categories from API that have valid clues
 async function setupCategories() {
     await getCategoryIds();
-    await allCategories(categories);
-    // await getCategoryIds();
-    // await allCategories(categories);
-    // await fillTable(categories);
-    
+    await allCategories(categories);    
 }
 
+// input categories into HTML table and update game state which effects start button logic
 async function loadTableAndStart() {
-    // await getCategoryIds();
-    // await allCategories(categories);
     await fillTable(categories);
     gameState = 'ongoing';
-    
 }
 
+// change text of start button
 function changeStartBtn(){
     $startBtn.html("Restart Game");
 }
 
+//start loading categories as soon as page loads
 setupCategories()
 
-/** On click of start / restart button, set up game. */
-
 // TODO
-
-/** On page load, add event handler for clicking clues */
-
-// TODO
-
-//1. Only load categories with questions that have length of 5. 
-//2. Catch/ try if error load page again 
-
-    // getCategoryIds();
-    // allCategories(categories);
-    // fillTable(categories);
-
-
-//Further Study:
-//how do I optimize the code? Create categories with IDs already in them?
-//use IDs in data to access objects? 
-
-
-
-
-//below code loops through each category, not sure if this is what I want
-// async function fillTable([categories]) {
-//     for (let category of categories){
-//         console.log(`loop`);
-//         // console.log(categories);
-//         console.log(category);
-//     }
-
-// }
-
-
-
-
-
-    
-
-// async function fillTable(categories) {
-//     let $table = $(`#jeopardy`);
-    
-//     }
-
-// $(`#jeopardy`).on("click", async function handleClick(e){
-//     // let target = $(e.target).closest(".question");
-//     let target = $(e.target).closest(".question");
-//     console.log(target);
-//     //how do I access the object with an event click?
-//     //access innerHTML somehow? and run logic to check if ob
-// });
-
-//  <td class="question" data-id="5-0">
-// ${allCategoriesArr[5].showing}
-// </td>
+// personal further improvement:
+//dynamically create table & ids instead of static table
+//make table look better
+//replace single object with missing clues instead of refreshing all 6 categories
+//possibly replace the faulty category id # in the array

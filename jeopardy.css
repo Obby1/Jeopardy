@@ -1,21 +1,36 @@
 /* some colors you may find useful:
-  #115ff4
-  #060ce9
-  #28a200
-  #8d2ab5
-  #74119c
+  #115ff4 light blue
+  #060ce9 dark blue
+  #28a200 green
+  #8d2ab5 purple 
+  #74119c darker purple
 */
 
+/* //color background blue, text orange */
+
+header {
+  text-align: center;
+}
+
+body{
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+#spin-container{
+  text-align: center;
+}
+
 .question {
-  background-color: blue;
+  background-color:  #115ff4;
 }
 
 .text-question{
-  background-color: lightblue;
+  background-color: #060ee990;
+  /* background-color:  #060ce9; */
 }
 
 .answer{
-  background-color: blueviolet;
+  background-color: #23749a;
 }
 
 table {
